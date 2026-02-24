@@ -19,7 +19,7 @@ jobs:
           - os: ubuntu-latest
             asset_name: PlantUML-Client-Linux
           - os: macos-latest
-            asset_name: PlantUML-Client-macOS
+            asset_name: PlantUML-Client-macOS.zip
           - os: windows-latest
             asset_name: PlantUML-Client-Windows.exe
 
@@ -40,23 +40,28 @@ jobs:
     - name: Build executable
       run: python build.py
         
-    - name: Rename executable for upload (Linux/macOS)
-      if: matrix.os != 'windows-latest'
-      run: |
-        mv dist/PlantUML-Client dist/${{ matrix.asset_name }}
-        
-    - name: Rename executable for upload (Windows)
+    - name: Package Windows
       if: matrix.os == 'windows-latest'
       run: |
         ren dist\PlantUML-Client.exe ${{ matrix.asset_name }}
+        
+    - name: Package Linux
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        mv dist/PlantUML-Client dist/${{ matrix.asset_name }}
+
+    - name: Package macOS
+      if: matrix.os == 'macos-latest'
+      run: |
+        cd dist
+        zip -r PlantUML-Client-macOS.zip PlantUML-Client.app
+        mv PlantUML-Client-macOS.zip ${{ matrix.asset_name }}
         
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.asset_name }}
-        path: |
-          dist/${{ matrix.asset_name }}
-          dist/PlantUML-Client.app/
+        path: dist/${{ matrix.asset_name }}
         retention-days: 7
         
     - name: Upload to Release
