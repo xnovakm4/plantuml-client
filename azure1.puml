@@ -1,0 +1,114 @@
+@startuml
+title Azure Network Design (vWAN + Secured vHubs + Forti NVA + SD-WAN Transit)
+' ===== Azure =====
+!define AzurePuml https://raw.githubusercontent.com/plantuml-stdlib/Azure-PlantUML/release/2-2/dist
+!include AzurePuml/AzureCommon.puml
+!include AzurePuml/Networking/AzureVirtualWAN.puml
+!include AzurePuml/Networking/AzureVirtualNetwork.puml
+!include AzurePuml/Networking/AzureFirewall.puml
+' ===== AWS ikony =====
+!define AWSPuml https://raw.githubusercontent.com/awslabs/aws-icons-for-plantuml/v14.0/dist
+!include AWSPuml/AWSCommon.puml
+!include AWSPuml/NetworkingContentDelivery/TransitGateway.puml
+!include AWSPuml/SecurityIdentityCompliance/WAF.puml
+skinparam shadowing false
+skinparam linetype ortho
+' Styly pro komponenty
+skinparam rectangle<<firewall>> {
+  BackgroundColor Tomato
+  BorderColor DarkRed
+  FontColor White
+  Shadowing true
+}
+skinparam rectangle<<router>> {
+  BackgroundColor LightSkyBlue
+  BorderColor DarkBlue
+  FontColor Black
+  Shadowing true
+}
+skinparam rectangle<<vhub>> {
+  BackgroundColor AliceBlue
+  BorderColor DodgerBlue
+  FontColor Black
+  Shadowing true
+}
+skinparam component<<workload>> {
+  BackgroundColor LightGreen
+  BorderColor DarkGreen
+}
+rectangle "Azure Virtual WAN (vWAN)" as vwanBox {
+  ' ================= NE =================
+  rectangle "Region North Europe (NE)" as rNE #AAAAAA {
+    rectangle "Secured vHub (NE)" as vhubNEbox #DDEBFF {
+      rectangle "Fortinet NVA (NE)" as fortiNE #FFF5E6 {
+        rectangle "<$WAF>\n**Perimeter Forti**\n//3 nodes//" as nePerim <<firewall>>
+        rectangle "<$WAF>\n**Internal Forti**\n//3 nodes//" as neInt <<firewall>>
+      }
+      rectangle "\n**Secured vHub (NE)**\n\n" as vhubNE <<vhub>>
+      ' Vynutit layout: Forti nahoře, vHub dole
+      fortiNE -[hidden]down- vhubNE
+    }
+    ' --- NEW: Transit vHub (NE) ---
+    rectangle "Transit vHub (NE)" as transitHubNEbox #DDEBFF {
+      rectangle "\n**Transit vHub (NE)**\n\n" as tVhubNE <<vhub>>
+      rectangle "<$TransitGateway>\n**Cisco 8000v #1**\n//SD-WAN edge//" as neC1 <<router>>
+      rectangle "<$TransitGateway>\n**Cisco 8000v #2**\n//SD-WAN edge//" as neC2 <<router>>
+      ' layout inside transit hub
+      neC1 -[hidden]down- tVhubNE
+      neC2 -[hidden]down- tVhubNE
+    }
+    rectangle "VNets (NE)" as vnetsNE #F3F7FF {
+      rectangle "Workload VNet (NE)" as wlNE #EEEEEE {
+        AzureVirtualNetwork(neVNet, "Workload VNet", "")
+        component "**Workloads**\n//many instances//" as neWorkloads <<workload>>
+      }
+      ' Transit VNet removed
+    }
+  }
+  ' ================= GW =================
+  rectangle "Region Germany West (GW)" as rGW #AAAAAA {
+    rectangle "Secured vHub (GW)" as vhubGWbox #DDEBFF {
+      rectangle "Fortinet NVA (GW)" as fortiGW #FFF5E6 {
+        rectangle "<$WAF>\n**Perimeter Forti**\n//3 nodes//" as gwPerim <<firewall>>
+        rectangle "<$WAF>\n**Internal Forti**\n//3 nodes//" as gwInt <<firewall>>
+      }
+      rectangle "\n**Secured vHub (GW)**\n\n" as vhubGW <<vhub>>
+      ' Vynutit layout: Forti nahoře, vHub dole
+      fortiGW -[hidden]down- vhubGW
+    }
+    ' --- NEW: Transit vHub (GW) ---
+    rectangle "Transit vHub (GW)" as transitHubGWbox #DDEBFF {
+      rectangle "\n**Transit vHub (GW)**\n\n" as tVhubGW <<vhub>>
+      rectangle "<$TransitGateway>\n**Cisco 8000v #1**\n//SD-WAN edge//" as gwC1 <<router>>
+      rectangle "<$TransitGateway>\n**Cisco 8000v #2**\n//SD-WAN edge//" as gwC2 <<router>>
+      ' layout inside transit hub
+      gwC1 -[hidden]down- tVhubGW
+      gwC2 -[hidden]down- tVhubGW
+    }
+    rectangle "VNets (GW)" as vnetsGW #F3F7FF {
+      rectangle "Workload VNet (GW)" as wlGW #EEEEEE {
+        AzureVirtualNetwork(gwVNet, "Workload VNet", "")
+        component "**Workloads**\n//many instances//" as gwWorkloads <<workload>>
+      }
+      ' Transit VNet removed
+    }
+  }
+}
+' External SD-WAN - pod Azure
+cloud "SD-WAN Cloud" as sdwan #lightblue {
+  [Overlay / Transport]
+}
+' ===== Relationships =====
+vhubNE -up- nePerim
+vhubNE -up- neInt
+vhubGW -up- gwPerim
+vhubGW -up- gwInt
+neVNet --up-- vhubNE
+gwVNet --up-- vhubGW
+
+' Čárkované propojení do SD-WAN (now from transit vhub routers)
+gwC1 -up..- sdwan
+neC2 -up..- sdwan
+gwC2 -up..- sdwan
+neC1 -up..- sdwan
+@enduml

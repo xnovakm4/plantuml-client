@@ -1,0 +1,70 @@
+name: Build Executables
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: PlantUML-Client-Linux
+          - os: macos-latest
+            asset_name: PlantUML-Client-macOS
+          - os: windows-latest
+            asset_name: PlantUML-Client-Windows.exe
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install PyQt6 requests
+        pip install pyinstaller
+        
+    - name: Build executable
+      run: python build.py
+        
+    - name: Rename executable for upload (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        mv dist/PlantUML-Client dist/${{ matrix.asset_name }}
+        
+    - name: Rename executable for upload (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        ren dist\PlantUML-Client.exe ${{ matrix.asset_name }}
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.asset_name }}
+        path: |
+          dist/${{ matrix.asset_name }}
+          dist/PlantUML-Client.app/
+        retention-days: 7
+        
+    - name: Upload to Release
+      if: github.event_name == 'release'
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: dist/${{ matrix.asset_name }}
+        asset_name: ${{ matrix.asset_name }}
+        tag: ${{ github.ref }}
+        overwrite: true
