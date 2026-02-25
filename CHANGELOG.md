@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Set default render engine to Local PlantUML to prioritize offline execution.
+- Removed default Remote Server URL from settings.
+- Improved the configuration saved success message to be more concise.
+- Improved the error message when the remote rendering server is unavailable to avoid displaying long URLs.
+
+### Fixed
+- Fixed an issue where the packaged macOS `.app` bundle opened the file explorer in the root directory instead of the directory containing the application.
+- Modified the file explorer to show the full filesystem structure, allowing navigation upwards from the starting directory.
+- Added a 5-second timeout to remote rendering requests to prevent long UI freezes when the server is unreachable.
+
 ### Added
 - Added local PlantUML rendering execution mode using `java -jar plantuml.jar` via temporary files processing to avoid stdout corruption.
 - Integrated the pure Java `Smetana` layout engine (`-Playout=smetana`) to entirely remove the requirement for installing Graphviz system-wide on any OS.

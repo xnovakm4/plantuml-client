@@ -1,4 +1,5 @@
 import os
+import sys
 from PyQt6.QtWidgets import (QMainWindow, QSplitter, QTreeView,
                              QWidget, QVBoxLayout, QLabel, QScrollArea, QToolBar,
                              QFileDialog, QMessageBox, QPushButton, QPlainTextEdit,
@@ -109,7 +110,22 @@ class MainWindow(QMainWindow):
         self.tree_view.setModel(self.file_model)
         
         # Start at current directory
-        self.tree_view.setRootIndex(self.file_model.index(os.getcwd()))
+        if getattr(sys, 'frozen', False):
+            app_path = os.path.abspath(sys.argv[0])
+            if ".app/Contents/MacOS" in app_path:
+                start_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(app_path))))
+            else:
+                start_dir = os.path.dirname(app_path)
+        else:
+            start_dir = os.getcwd()
+            
+        self.tree_view.setRootIndex(self.file_model.index(self.file_model.rootPath()))
+        
+        # Expand and scroll to starting directory
+        start_index = self.file_model.index(start_dir)
+        self.tree_view.expand(start_index)
+        self.tree_view.scrollTo(start_index)
+        self.tree_view.setCurrentIndex(start_index)
         
         self.tree_view.setRootIsDecorated(True)
         self.tree_view.setHeaderHidden(True)

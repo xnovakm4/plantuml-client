@@ -3,10 +3,10 @@ import os
 import copy
 
 DEFAULT_SETTINGS = {
-    "server_url": "http://10.128.128.203:4181",
+    "server_url": "",
     "api_key": "",
     "language": "EN",
-    "rendering_mode": "remote"
+    "rendering_mode": "local"
 }
 
 class SettingsManager:

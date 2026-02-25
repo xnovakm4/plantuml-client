@@ -23,7 +23,7 @@ class PlantUMLClient:
             
     def _render_remote(self, puml_text: str) -> bytes:
         encoded = encode_plantuml(puml_text)
-        server_url = self.settings.get("server_url", "http://10.128.128.203:4181")
+        server_url = self.settings.get("server_url", "")
         api_key = self.settings.get("api_key", "")
         
         if not server_url:
@@ -34,9 +34,12 @@ class PlantUMLClient:
         if api_key:
             headers["X-API-Key"] = api_key
             
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.content
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            response.raise_for_status()
+            return response.content
+        except requests.exceptions.RequestException:
+            raise RuntimeError(tr("remote_render_failed"))
 
     def _render_local(self, puml_text: str) -> bytes:
         import tempfile

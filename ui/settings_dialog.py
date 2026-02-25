@@ -88,5 +88,5 @@ class SettingsDialog(QDialog):
         self.settings.set("api_key", self.api_input.text().strip())
         I18n.set_language(self.lang_combo.currentText())
         
-        QMessageBox.information(self, tr("info"), tr("settings_saved") + "\n" + tr("language_changed"))
+        QMessageBox.information(self, tr("info"), tr("settings_saved"))
         self.accept()

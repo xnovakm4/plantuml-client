@@ -35,7 +35,8 @@ TRANSLATIONS = {
         "java_install_instructions": "Java is required for local rendering. Please install it from https://adoptium.net/ and restart the application.",
         "downloading_plantuml": "Downloading PlantUML...",
         "plantuml_download_error": "Failed to download plantuml.jar.",
-        "plantuml_download_success": "plantuml.jar downloaded successfully."
+        "plantuml_download_success": "plantuml.jar downloaded successfully.",
+        "remote_render_failed": "Failed to connect to the remote rendering server."
     },
     "CS": {
         "app_title": "PlantUML Klient",
@@ -73,10 +74,11 @@ TRANSLATIONS = {
         "java_install_instructions": "Pro lokální vykreslování je vyžadována Java. Nainstalujte ji prosím z https://adoptium.net/ a restartujte aplikaci.",
         "downloading_plantuml": "Stahuji PlantUML...",
         "plantuml_download_error": "Nepodařilo se stáhnout plantuml.jar.",
-        "plantuml_download_success": "plantuml.jar byl úspěšně stažen."
+        "plantuml_download_success": "plantuml.jar byl úspěšně stažen.",
+        "remote_render_failed": "Nepodařilo se připojit k serveru pro vzdálené vykreslování."
     }
 }
-
+        
 class I18n:
     _current_lang = "EN"
 
